@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width">
+  	<title>マインスイーパー実験</title>
+	<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="contents" style="--i:0">
+	<form>
+		<fieldset>
+			<legend><span>マインスイーパー作成</span></legend>
+			<div class="input">
+				
+			<p>
+				<label for="row">行：</label>
+				<input class="form-control-sm" type="number" name="row" id="row" value="10" placeholder="整数を入力してください" min="10" max="200">
+			</p>		
+			<p>
+				<label for="col">列：</label>
+				<input class="form-control-sm" type="number" name="col" id="col" value="10" placeholder="整数を入力してください" min="10" max="200">
+			</p>
+			<p>
+				<label for="mine">地雷：</label>
+				<input class="form-control-sm" type="number" name="mine" id="mine" value="10" placeholder="整数を入力してください" min="10">
+			</p>
+			<p>
+				<input type="button" value="リセット">
+			</p>
+			</div>
+		</fieldset>
+	</form>
+	<div>
+		<table border="1" id="table1">
+			<!-- main.jsで追加する -->
+		</table>
+		<div class="result">
+			<p>finish</p>
+		</div>
+	</div>
+</div>
+<script src="./js/vendor/jquery-3.6.0.min.js"></script>
+<script src="./js/tableObject.js"></script>
+<script src="./js/mineSweeper.js"></script>
+<script src="./js/main.js"></script>
+</body>
+</body>
+</html>
