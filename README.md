@@ -1,3 +1,7 @@
+# URL
+- [mineSweeper](https://levelco.github.io/)
+- [最新ソース](https://github.com/levelco/levelco.github.io/tree/2022/02/15)
+
 # mineSweeper
 ブラウザ(chrome等)で動くマインスイーパー
 
