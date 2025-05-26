@@ -1,7 +1,41 @@
-// 2次元配列の作成
-generate2DArray = (m, n) => {
-	return Array.from(new Array(m), _ => new Array(n).fill(0));
-};
+// 効率的なセルデータ構造
+class SparseGrid {
+    constructor() {
+        this.cells = new Map();
+    }
+    
+    // キーを生成
+    getKey(x, y) {
+        return `${x},${y}`;
+    }
+    
+    // 値を設定
+    set(x, y, value) {
+        if (value === 0) {
+            // 0の場合は削除（デフォルト値と見なす）
+            this.cells.delete(this.getKey(x, y));
+        } else {
+            this.cells.set(this.getKey(x, y), value);
+        }
+    }
+    
+    // 値を取得
+    get(x, y) {
+        const value = this.cells.get(this.getKey(x, y));
+        return value !== undefined ? value : 0;
+    }
+    
+    // 値が存在するか確認
+    has(x, y) {
+        return this.cells.has(this.getKey(x, y));
+    }
+    
+    // 全てのセルをクリア
+    clear() {
+        this.cells.clear();
+    }
+}
+
 const	dx = [1,-1,0,0,1,1,-1,-1],
 		dy = [0,0,1,-1,1,-1,1,-1];
 
@@ -18,10 +52,10 @@ class MineSweeper{
 		// 行・列の幅
 		this._width = this._value[0];
 		this._height = this._value[1];
-		// 地雷設置用の2次元配列
-		this._vboard  = generate2DArray(this._value[0],this._value[1]);
-		// チェック判定用の2次元配列
-		this._checked = generate2DArray(this._value[0],this._value[1]);
+		// 地雷設置用のスパースグリッド
+		this._vboard = new SparseGrid();
+		// チェック判定用のスパースグリッド
+		this._checked = new SparseGrid();
 
 		this._isStart = false;
 		this._isEnd = false;
@@ -47,8 +81,8 @@ class MineSweeper{
 	}
 	set reset(inputValArray){
 		this.inputValue = inputValArray;
-		this._vboard  = generate2DArray(inputValArray[0],inputValArray[1]);
-		this._checked = generate2DArray(inputValArray[0],inputValArray[1]);
+		this._vboard = new SparseGrid();
+		this._checked = new SparseGrid();
 		this._isStart = false;
 		this._isEnd = false;
 	}
@@ -68,18 +102,18 @@ class MineSweeper{
 			this._isStart = false;
 		} else {
 			// 初期クリック地点には地雷は設置しない
-			this._vboard[sX][sY] = 100;
+			this._vboard.set(sX, sY, 100);
 			$('#x'+(sX+1)+'y'+(sY+1)).addClass('safe');
 			let count = 0;
 			while(count < mine){
 				let x = Math.floor(Math.random() * (this._width));
 				let y = Math.floor(Math.random() * (this._height));
 				// 設置済みはスルー
-				if(this._vboard[x][y] > 0){
+				if(this._vboard.get(x, y) > 0){
 						continue;
 				}
 				// 地雷を設置
-				this._vboard[x][y] = 1;
+				this._vboard.set(x, y, 1);
 				count++;
 
 				// デバッグ用にクラスを付加:消しても大丈夫
@@ -88,7 +122,7 @@ class MineSweeper{
 			}
 			this._isStart = true;
 		}
-	} 
+	}
 	get end(){
 		return this._isEnd;
 	}
@@ -109,14 +143,14 @@ class MineSweeper{
 	// 地雷の位置を配列で取得
 	get mines(){
 		let arr = [];
-		for(let x=0;x<this._width;x++){
-			for(let y=0;y<this._height;y++){
-				if(this._vboard[x][y]===1){
-					arr.push({
-						'x':x,
-						'y':y
-					});
-				}
+		// スパースグリッドの全てのセルを確認
+		for(let key of this._vboard.cells.keys()) {
+			const [x, y] = key.split(',').map(Number);
+			if(this._vboard.get(x, y) === 1){
+				arr.push({
+					'x': x,
+					'y': y
+				});
 			}
 		}
 		return arr;
@@ -132,10 +166,10 @@ class MineSweeper{
 			  y = position[1];
 		let nowId = this.index2id(x,y);
 		// チェック済み
-		if(this._checked[x][y]){
+		if(this._checked.get(x, y) === 1){
 			return;
 		// 地雷を選択した場合
-		}else if(this._vboard[x][y] == 1){
+		}else if(this._vboard.get(x, y) === 1){
 			$(nowId).addClass('end');
 			let mines = this.mines;
 			for(let mine of mines){
@@ -147,7 +181,7 @@ class MineSweeper{
 			return;
 		}
 
-		this._checked[x][y] = 1;
+		this._checked.set(x, y, 1);
 		$(nowId).addClass('safe');
 		// 周辺の地雷数を調べる
 		let count = 0;
@@ -160,7 +194,7 @@ class MineSweeper{
 			if(nx < 0 || nx >= this._width || ny < 0 || ny >= this._height){
 				continue;
 			}
-			else if(this._vboard[nx][ny] == 1){
+			else if(this._vboard.get(nx, ny) === 1){
 				count++;
 			}
 		}
@@ -172,7 +206,7 @@ class MineSweeper{
 				if(nx < 0 || nx >= this._width || ny < 0 || ny >= this._height){
 					continue;
 				}
-				if(!this._checked[nx][ny]){
+				if(this._checked.get(nx, ny) !== 1){
 					this.addQueue = [nx,ny];
 				}
 			}

@@ -82,30 +82,36 @@ class TableObject{
 
 	addTableText(arr){
 		console.assert(arr.length == 2,'引数が不正な値です');
-		let appendText = "";
 		const row = arr[0],
 			  col = arr[1];
-		for(let i=0;i<row;i++){
-			for(let j=1;j<=col;j++){
+		
+		// メモリ効率のためにDocumentFragmentを使用
+		const fragment = document.createDocumentFragment();
+		
+		for(let i=0; i < row; i++){
+			const tr = document.createElement('tr');
+			
+			for(let j=1; j <= col; j++){
+				const td = document.createElement('td');
 				// セル内の文字列
-				let cellID = 'x'+j +'y'+ (i+1);
-				if(j==1){
-					appendText +='<tr>';
-				}			
-				appendText += '<td id="'+ cellID + '"></td>';
-				if(j==col){
-					appendText +='</tr>';
-				}
+				const cellID = 'x' + j + 'y' + (i+1);
+				td.id = cellID;
+				tr.appendChild(td);
 			}
+			
+			fragment.appendChild(tr);
 		}
-		return appendText;
+		
+		// テーブルをクリアして新しい要素を追加
+		$(this._tableSelector).empty().append(fragment);
+		return 0;
 	};
 
 	updateTable(){
 		this.updateValue();
 		// 値が正常(空文字など)なら更新
 		if(Math.min(this._val[0],this._val[1]) > 0){
-			$(this._tableSelector).html(this.addTableText(this._val));
+			this.addTableText(this._val);
 			return 0;
 		}
 		return 1;
