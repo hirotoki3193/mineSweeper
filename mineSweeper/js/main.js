@@ -58,17 +58,33 @@ $(function(){
 
 			// bfs
 			que.push(ms.getPosition(tdId));
-			while(que.length){
-				let cell = que.shift();
-				ms.checkIsSafe(cell);
-			}
-			// 地雷を選んだ場合
-			if(ms.end){
-				$('.result').find('p').text('GAME OVER...');
-				$('.result').addClass('active');
-			}
-			// 開いたマスの数を取得
-			setTimeout(function(){
+			
+			// 大きなボードの場合は処理を分割する
+			const processQueueChunk = () => {
+				const startTime = Date.now();
+				const MAX_PROCESS_TIME = 16; // ms、約60FPSを維持するため
+				
+				while(que.length && (Date.now() - startTime < MAX_PROCESS_TIME)) {
+					let cell = que.shift();
+					ms.checkIsSafe(cell);
+				}
+				
+				// キューにまだ要素が残っている場合は、次のフレームで処理を続ける
+				if(que.length) {
+					requestAnimationFrame(processQueueChunk);
+				} else {
+					// 処理完了後に終了判定
+					checkGameStatus();
+				}
+			};
+			
+			const checkGameStatus = () => {
+				// 地雷を選んだ場合
+				if(ms.end){
+					$('.result').find('p').text('GAME OVER...');
+					$('.result').addClass('active');
+				}
+				// 開いたマスの数を取得
 				let mineCount = ms.mineCount;
 				let safeCount = $('.safe').length;
 				let per = safeCount / (board.tdCount - mineCount);
@@ -82,7 +98,10 @@ $(function(){
 					$('.result').find('p').text('congratulations!');
 					$('.result').addClass('active');
 				}
-			},100);
+			};
+			
+			// 処理開始
+			processQueueChunk();
 		}
 	});
 });

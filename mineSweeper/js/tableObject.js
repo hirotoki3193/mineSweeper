@@ -82,30 +82,65 @@ class TableObject{
 
 	addTableText(arr){
 		console.assert(arr.length == 2,'引数が不正な値です');
-		let appendText = "";
 		const row = arr[0],
 			  col = arr[1];
-		for(let i=0;i<row;i++){
-			for(let j=1;j<=col;j++){
-				// セル内の文字列
-				let cellID = 'x'+j +'y'+ (i+1);
-				if(j==1){
-					appendText +='<tr>';
-				}			
-				appendText += '<td id="'+ cellID + '"></td>';
-				if(j==col){
-					appendText +='</tr>';
+		
+		// テーブルをクリア
+		$(this._tableSelector).empty();
+		
+		// 大きなボードの場合はチャンク処理を実行
+		const CHUNK_SIZE = 50; // 一度に処理する行数
+		const renderChunk = (startRow) => {
+			const endRow = Math.min(startRow + CHUNK_SIZE, row);
+			
+			const fragment = document.createDocumentFragment();
+			
+			for(let i = startRow; i < endRow; i++){
+				const tr = document.createElement('tr');
+				
+				for(let j = 1; j <= col; j++){
+					const td = document.createElement('td');
+					// セル内の文字列
+					const cellID = 'x' + j + 'y' + (i+1);
+					td.id = cellID;
+					tr.appendChild(td);
 				}
+				
+				fragment.appendChild(tr);
 			}
-		}
-		return appendText;
+			
+			$(this._tableSelector).append(fragment);
+			
+			// まだ描画する行が残っていれば、次のチャンクを描画
+			if (endRow < row) {
+				// タイマーを使って残りのチャンクを非同期で描画
+				// これによりブラウザがフリーズする問題を防ぐ
+				setTimeout(() => renderChunk(endRow), 0);
+			}
+		};
+		
+		// 最初のチャンクから描画開始
+		renderChunk(0);
+		
+		return 0;
 	};
 
 	updateTable(){
 		this.updateValue();
 		// 値が正常(空文字など)なら更新
 		if(Math.min(this._val[0],this._val[1]) > 0){
-			$(this._tableSelector).html(this.addTableText(this._val));
+			// 大きなテーブルの場合はローディング表示
+			if(this._val[0] * this._val[1] > 2500) { // 50x50以上の場合
+				$(this._tableSelector).parent().addClass('loading');
+			}
+			
+			this.addTableText(this._val);
+			
+			// ローディング表示を終了
+			setTimeout(() => {
+				$(this._tableSelector).parent().removeClass('loading');
+			}, 100);
+			
 			return 0;
 		}
 		return 1;
