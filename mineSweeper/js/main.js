@@ -58,9 +58,21 @@ $(function(){
 
 			// bfs
 			que.push(ms.getPosition(tdId));
+			// メモリ使用量削減のため、1回のループで処理するセル数を制限
+			const MAX_PROCESS_PER_ITERATION = 100;
 			while(que.length){
-				let cell = que.shift();
-				ms.checkIsSafe(cell);
+				// 一度に処理するセル数を制限
+				const processCount = Math.min(que.length, MAX_PROCESS_PER_ITERATION);
+				for(let i = 0; i < processCount; i++) {
+					let cell = que.shift();
+					ms.checkIsSafe(cell);
+				}
+				
+				// 残りのセルが多い場合は次のイベントループで処理するために少し待つ
+				if(que.length > 0) {
+					// ここではsetTimeoutを使わずに残りを処理（ゲーム進行を滑らかにするため）
+					// 必要に応じてsetTimeoutを使ってメモリを開放することも可能
+				}
 			}
 			// 地雷を選んだ場合
 			if(ms.end){

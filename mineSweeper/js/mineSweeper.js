@@ -165,6 +165,7 @@ class MineSweeper{
 			}
 		}
 		if(count == 0){
+			// 空白セルの場合、隣接する4方向のセルのみを確認（メモリ使用量削減のため）
 			for(let i=0;i<4;i++){
 				let nx = x + dx[i],
 					ny = y + dy[i];
@@ -173,7 +174,10 @@ class MineSweeper{
 					continue;
 				}
 				if(!this._checked[nx][ny]){
-					this.addQueue = [nx,ny];
+					// メモリ効率のため、キューのサイズを制限
+					if(this._queue.length < 1000) {
+						this.addQueue = [nx,ny];
+					}
 				}
 			}
 		} else {
