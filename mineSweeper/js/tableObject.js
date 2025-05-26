@@ -85,25 +85,43 @@ class TableObject{
 		const row = arr[0],
 			  col = arr[1];
 		
-		// メモリ効率のためにDocumentFragmentを使用
-		const fragment = document.createDocumentFragment();
+		// テーブルをクリア
+		$(this._tableSelector).empty();
 		
-		for(let i=0; i < row; i++){
-			const tr = document.createElement('tr');
+		// 大きなボードの場合はチャンク処理を実行
+		const CHUNK_SIZE = 50; // 一度に処理する行数
+		const renderChunk = (startRow) => {
+			const endRow = Math.min(startRow + CHUNK_SIZE, row);
 			
-			for(let j=1; j <= col; j++){
-				const td = document.createElement('td');
-				// セル内の文字列
-				const cellID = 'x' + j + 'y' + (i+1);
-				td.id = cellID;
-				tr.appendChild(td);
+			const fragment = document.createDocumentFragment();
+			
+			for(let i = startRow; i < endRow; i++){
+				const tr = document.createElement('tr');
+				
+				for(let j = 1; j <= col; j++){
+					const td = document.createElement('td');
+					// セル内の文字列
+					const cellID = 'x' + j + 'y' + (i+1);
+					td.id = cellID;
+					tr.appendChild(td);
+				}
+				
+				fragment.appendChild(tr);
 			}
 			
-			fragment.appendChild(tr);
-		}
+			$(this._tableSelector).append(fragment);
+			
+			// まだ描画する行が残っていれば、次のチャンクを描画
+			if (endRow < row) {
+				// タイマーを使って残りのチャンクを非同期で描画
+				// これによりブラウザがフリーズする問題を防ぐ
+				setTimeout(() => renderChunk(endRow), 0);
+			}
+		};
 		
-		// テーブルをクリアして新しい要素を追加
-		$(this._tableSelector).empty().append(fragment);
+		// 最初のチャンクから描画開始
+		renderChunk(0);
+		
 		return 0;
 	};
 
@@ -111,7 +129,18 @@ class TableObject{
 		this.updateValue();
 		// 値が正常(空文字など)なら更新
 		if(Math.min(this._val[0],this._val[1]) > 0){
+			// 大きなテーブルの場合はローディング表示
+			if(this._val[0] * this._val[1] > 2500) { // 50x50以上の場合
+				$(this._tableSelector).parent().addClass('loading');
+			}
+			
 			this.addTableText(this._val);
+			
+			// ローディング表示を終了
+			setTimeout(() => {
+				$(this._tableSelector).parent().removeClass('loading');
+			}, 100);
+			
 			return 0;
 		}
 		return 1;
